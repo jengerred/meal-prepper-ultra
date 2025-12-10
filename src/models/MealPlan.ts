@@ -43,16 +43,6 @@ const mealPlanSchema = new Schema<IMealPlan>(
   { timestamps: true }
 );
 
-// Calculate total cost and cost per serving before saving
-mealPlanSchema.pre('save', function (next) {
-  if (this.ingredients && this.ingredients.length > 0 && this.servings > 0) {
-    const total = this.ingredients.reduce((sum, ing) => sum + (ing.price || 0) * ing.quantity, 0);
-    this.totalCost = parseFloat(total.toFixed(2));
-    this.costPerServing = parseFloat((total / this.servings).toFixed(2));
-  }
-  next();
-});
-
 const MealPlan = mongoose.models.MealPlan || mongoose.model<IMealPlan>('MealPlan', mealPlanSchema);
 
 export default MealPlan;

@@ -3,8 +3,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 
-type User = {
-  id: string;
+interface User {
+  _id: string;
   name: string;
   email: string;
 };
@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (status === 'authenticated' && session?.user) {
       setUser({
-        id: session.user.id,
+        _id: session.user._id as string,
         name: session.user.name || '',
         email: session.user.email || '',
       });
