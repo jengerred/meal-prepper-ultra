@@ -8,34 +8,60 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  const handleDemoLogin = async () => {
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      const result = await signIn('credentials', {
+        redirect: false,
+        email: 'demo@example.com',
+        password: 'demo-password',
+        demo: 'true'
+      });
+
+      if (result?.error) {
+        console.error('Demo login error:', result.error);
+        setError('Failed to start demo. Please try again.');
+      } else {
+        window.location.href = '/dashboard';
+      }
+    } catch (err) {
+      console.error('Demo login exception:', err);
+      setError('An error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     
-    // Demo mode - accept any non-empty email and password
+    // Accept any non-empty email and password
     if (!email || !password) {
       setError('Please enter both email and password');
       return;
     }
 
     try {
-      // Always use demo mode regardless of environment
+      // Use demo mode with provided email
       const result = await signIn('credentials', {
         redirect: false,
-        email,
-        password,
-        demo: 'true' // Force demo mode
+        email: email || 'demo@example.com',
+        password: password || 'demo-password',
+        demo: 'true'
       });
 
       if (result?.error) {
         console.error('Login error:', result.error);
-        setError('Demo login failed. Please try again.');
+        setError('Login failed. Please try again.');
       } else {
-        // Redirect to dashboard on successful login
-        router.push('/dashboard');
-        router.refresh(); // Ensure the page updates
+        // Force full page reload to ensure session is properly set
+        window.location.href = '/dashboard';
       }
     } catch (err) {
       console.error('Login exception:', err);
@@ -65,7 +91,7 @@ export default function LoginPage() {
             </div>
             <div className="ml-3">
               <p className="text-sm text-blue-700">
-                <span className="font-medium">Demo Mode:</span> You can use any email and password to log in.
+                <span className="font-medium">Demo Mode:</span> Use any email and password to sign in, or click "Try Demo" for quick access.
               </p>
             </div>
           </div>
@@ -108,22 +134,8 @@ export default function LoginPage() {
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                Remember me
-              </label>
-            </div>
-
-            <div className="text-sm">
-              <a href="#" className="font-medium text-green-600 hover:text-green-500">
-                Forgot your password?
-              </a>
+            <div className="text-sm w-full text-center">
+              <span className="text-gray-600">No account needed for demo</span>
             </div>
           </div>
 
@@ -132,7 +144,7 @@ export default function LoginPage() {
               type="submit"
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
             >
-              Sign in
+              Sign In
             </button>
           </div>
         </form>
@@ -142,17 +154,18 @@ export default function LoginPage() {
               <div className="w-full border-t border-gray-300"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+              <span className="px-2 bg-white text-gray-500">Quick Start</span>
             </div>
           </div>
 
           <div className="mt-6 grid grid-cols-1 gap-3">
             <div>
               <button
-                onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
-                className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+                onClick={handleDemoLogin}
+                disabled={isLoading}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span>Sign in with Google</span>
+                {isLoading ? 'Loading...' : 'Try Demo'}
               </button>
             </div>
           </div>
