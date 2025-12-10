@@ -1,7 +1,6 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useSearchParams as useUrlSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Save, Edit } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -49,13 +48,19 @@ interface IngredientPrice extends Ingredient {
 
 interface PageProps {
   params: { id: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
 }
+
+type GenerateMetadataProps = {
+  params: { id: string };
+  searchParams: { [key: string]: string | string[] | undefined };
+};
 
 export default function CostComparisonPage({ 
   params
 }: PageProps) {
   const router = useRouter();
-  const searchParams = useUrlSearchParams();
+  const searchParams = useSearchParams();
   const [mealPlan, setMealPlan] = useState<MealPlanData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [ingredientsWithPrices, setIngredientsWithPrices] = useState<IngredientPrice[]>([]);

@@ -1,18 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Disable Turbopack
-  experimental: {
-    turbo: false,
-    // Enable server actions
-    serverActions: true,
-  },
   // Images configuration
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '**', // Allow all domains in production
+        hostname: '**',
       },
       {
         protocol: 'http',
@@ -22,14 +16,13 @@ const nextConfig = {
       },
     ],
   },
-  // Webpack configuration
-  webpack: (config, { isServer }) => {
-    config.experiments = {
-      ...config.experiments,
-      topLevelAwait: true,
-    };
-    return config;
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
   },
+  // Disable webpack configuration to avoid conflicts with Turbopack
+  webpack: undefined,
 };
 
 module.exports = nextConfig;
