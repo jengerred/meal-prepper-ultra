@@ -3,11 +3,17 @@ const nextConfig = {
   reactStrictMode: true,
   // Disable Turbopack
   experimental: {
-    turbo: false
+    turbo: false,
+    // Enable server actions
+    serverActions: true,
   },
   // Images configuration
   images: {
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**', // Allow all domains in production
+      },
       {
         protocol: 'http',
         hostname: 'localhost',

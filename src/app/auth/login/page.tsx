@@ -20,21 +20,26 @@ export default function LoginPage() {
       return;
     }
 
-    // In demo mode, we'll simulate a successful login
-    // In a real app, this would be handled by NextAuth
-    const result = await signIn('credentials', {
-      redirect: false,
-      email,
-      password,
-      // This flag tells our auth callback to accept any credentials in demo mode
-      demo: 'true'
-    });
+    try {
+      // Always use demo mode regardless of environment
+      const result = await signIn('credentials', {
+        redirect: false,
+        email,
+        password,
+        demo: 'true' // Force demo mode
+      });
 
-    if (result?.error) {
-      console.error('Login error:', result.error);
-      setError('Demo mode: Login simulation failed. Please try again.');
-    } else {
-      router.push('/dashboard');
+      if (result?.error) {
+        console.error('Login error:', result.error);
+        setError('Demo login failed. Please try again.');
+      } else {
+        // Redirect to dashboard on successful login
+        router.push('/dashboard');
+        router.refresh(); // Ensure the page updates
+      }
+    } catch (err) {
+      console.error('Login exception:', err);
+      setError('An error occurred during login. Please try again.');
     }
   };
 

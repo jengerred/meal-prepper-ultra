@@ -1,8 +1,17 @@
 import { NextAuthOptions, User as NextAuthUser } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { compare } from 'bcryptjs';
+import { Document } from 'mongoose';
 import dbConnect from './db';
 import User from '@/models/User';
+
+interface UserDocument extends Document {
+  _id: any;
+  email: string;
+  password: string;
+  name: string;
+  location?: string;
+}
 
 interface ExtendedUser extends NextAuthUser {
   id: string;
@@ -17,6 +26,10 @@ interface CredentialsType {
 }
 
 export const authOptions: NextAuthOptions = {
+  session: {
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -27,19 +40,7 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials: any) {
         try {
-          // Handle demo login
-          if (credentials?.demo) {
-            return {
-              id: 'demo-user-id',
-              name: 'Demo User',
-              email: 'demo@example.com',
-              role: 'demo',
-              _id: 'demo-user-id',
-              location: 'Demo Location'
-            } as ExtendedUser;
-          }
-
-          // Regular login flow
+          // Validate credentials
           if (!credentials?.email || !credentials?.password) {
             throw new Error('Please provide both email and password');
           }
@@ -62,10 +63,14 @@ export const authOptions: NextAuthOptions = {
           // Find user by email
           const user = await User.findOne({ email: credentials.email })
             .select('+password')
-            .lean();
+            .lean()
+            .exec() as UserDocument | null;
 
           if (!user) {
             throw new Error('No user found with this email');
+          }
+          if (!user!.password) {
+            throw new Error('User has no password set');
           }
 
           // Check password
@@ -96,11 +101,14 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         // Type assertion since we know we're setting the role in the authorize callback
         const extendedUser = user as unknown as ExtendedUser;
-        token.id = extendedUser.id;
-        token._id = extendedUser._id;
-        token.name = extendedUser.name;
-        token.email = extendedUser.email;
-        token.role = extendedUser.role || 'user'; // Default to 'user' if role is not set
+        return {
+          ...token,
+          id: extendedUser.id,
+          _id: extendedUser._id || extendedUser.id,
+          role: extendedUser.role || 'user',
+          name: extendedUser.name,
+          email: extendedUser.email
+        };
       }
       return token;
     },
@@ -117,9 +125,5 @@ export const authOptions: NextAuthOptions = {
     signIn: '/auth/login',
     error: '/auth/error',
   },
-  session: {
-    strategy: 'jwt',
-  },
-  secret: process.env.NEXTAUTH_SECRET || 'your-secret-key',
   debug: process.env.NODE_ENV === 'development',
 };
