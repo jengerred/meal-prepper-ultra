@@ -5,6 +5,10 @@ import { Document } from 'mongoose';
 import dbConnect from './db';
 import User from '@/models/User';
 
+// For demo purposes - in production, set NEXTAUTH_SECRET environment variable
+const isProduction = process.env.NODE_ENV === 'production';
+const secret = process.env.NEXTAUTH_SECRET || (isProduction ? undefined : 'demo-secret-change-in-production');
+
 interface UserDocument extends Document {
   _id: any;
   email: string;
@@ -26,6 +30,7 @@ interface CredentialsType {
 }
 
 export const authOptions: NextAuthOptions = {
+  secret, // Use the secret we defined above
   session: {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
@@ -125,5 +130,5 @@ export const authOptions: NextAuthOptions = {
     signIn: '/auth/login',
     error: '/auth/error',
   },
-  debug: process.env.NODE_ENV === 'development',
+  debug: !isProduction,
 };
