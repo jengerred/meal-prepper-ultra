@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 export default function RegisterPage() {
-  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -16,7 +16,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setError('');
 
-    if (!name || !email || !password) {
+    if (!username || !email || !password) {
       setError('Please fill in all fields');
       return;
     }
@@ -33,14 +33,14 @@ export default function RegisterPage() {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // For demo purposes, we'll just log the registration data
-      console.log('Demo registration:', { name, email });
+      console.log('Demo registration:', { username, email });
       
       // Auto-login after registration in demo mode
       const result = await signIn('credentials', {
         redirect: false,
         email,
         password,
-        name, // Include name for the session
+        username, // Use username for the session
         demo: 'true' // Demo mode flag
       });
 
@@ -73,19 +73,19 @@ export default function RegisterPage() {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label htmlFor="name" className="sr-only">
-                Full Name
+              <label htmlFor="username" className="sr-only">
+                Username
               </label>
               <input
-                id="name"
-                name="name"
+                id="username"
+                name="username"
                 type="text"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
-                placeholder="Full Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                autoComplete="username" />
             </div>
             <div>
               <label htmlFor="email-address" className="sr-only">

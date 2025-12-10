@@ -1,8 +1,25 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Save } from 'lucide-react';
+import { useSearchParams as useUrlSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { ArrowLeft, Save, Edit } from 'lucide-react';
 import { useEffect, useState } from 'react';
+
+
+
+interface SavedMealPlan {
+  id: string;
+  name: string;
+  ingredients: Array<{
+    name: string;
+    quantity: string;
+    unit: string;
+  }>;
+  servings?: number;
+  createdAt: string;
+  updatedAt?: string;
+}
 
 interface Ingredient {
   id: number;
@@ -30,9 +47,15 @@ interface IngredientPrice extends Ingredient {
   };
 }
 
-export default function CostComparisonPage({ params }: { params: { id: string } }) {
+interface PageProps {
+  params: { id: string };
+}
+
+export default function CostComparisonPage({ 
+  params
+}: PageProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams = useUrlSearchParams();
   const [mealPlan, setMealPlan] = useState<MealPlanData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [ingredientsWithPrices, setIngredientsWithPrices] = useState<IngredientPrice[]>([]);
@@ -47,6 +70,34 @@ export default function CostComparisonPage({ params }: { params: { id: string } 
     total: string;
     perServing: string;
   } | null>(null);
+
+  const saveMealPlanToStorage = (mealPlan: Omit<SavedMealPlan, 'id' | 'createdAt' | 'updatedAt'>): SavedMealPlan => {
+    const newMealPlan: SavedMealPlan = {
+      ...mealPlan,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    const existingPlans = JSON.parse(localStorage.getItem('savedMealPlans') || '[]');
+    const updatedPlans = [...existingPlans, newMealPlan];
+    localStorage.setItem('savedMealPlans', JSON.stringify(updatedPlans));
+    return newMealPlan;
+  };
+
+  const handleSavePlan = () => {
+    if (!mealPlan) return;
+    
+    const servings = 4; // Default servings, can be made configurable
+    saveMealPlanToStorage({
+      name: mealPlan.name,
+      ingredients: mealPlan.ingredients,
+      servings
+    });
+    
+    // Navigate to saved plans
+    router.push('/meal-plans/saved');
+  };
 
   // Calculate prices when mealPlan changes
   useEffect(() => {
@@ -147,19 +198,22 @@ export default function CostComparisonPage({ params }: { params: { id: string } 
 
   // Parse the meal plan data from URL parameters
   useEffect(() => {
-    const name = searchParams.get('name');
-    const ingredientsParam = searchParams.get('ingredients');
-    
-    if (name && ingredientsParam) {
-      try {
-        const ingredients = JSON.parse(ingredientsParam);
-        setMealPlan({ name, ingredients });
-      } catch (error) {
-        console.error('Error parsing ingredients:', error);
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const name = urlParams.get('name');
+      const ingredientsParam = urlParams.get('ingredients');
+      
+      if (name && ingredientsParam) {
+        try {
+          const ingredients = JSON.parse(decodeURIComponent(ingredientsParam));
+          setMealPlan({ name, ingredients });
+        } catch (error) {
+          console.error('Error parsing ingredients:', error);
+        }
       }
+      setIsLoading(false);
     }
-    setIsLoading(false);
-  }, [searchParams]);
+  }, []);
 
   if (isLoading || !stores.length) {
     return <div className="min-h-screen flex items-center justify-center">Loading store data...</div>;
@@ -186,15 +240,34 @@ export default function CostComparisonPage({ params }: { params: { id: string } 
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center text-gray-600 hover:text-gray-900"
+          <Link 
+            href="/dashboard"
+            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 flex items-center"
           >
-            <ArrowLeft className="h-4 w-4 mr-1" /> Back to Dashboard
-          </button>
-          <button className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center">
-            <Save className="h-4 w-4 mr-1" /> Save Plan
-          </button>
+            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Dashboard
+          </Link>
+          
+          <div className="flex space-x-3">
+            <button
+              onClick={() => {
+                const queryParams = new URLSearchParams({
+                  edit: 'true',
+                  name: encodeURIComponent(mealPlan.name),
+                  ingredients: encodeURIComponent(JSON.stringify(mealPlan.ingredients))
+                });
+                router.push(`/meal-plans?${queryParams.toString()}`);
+              }}
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 flex items-center"
+            >
+              <Edit className="h-4 w-4 mr-2" /> Back to Edit
+            </button>
+            <button
+              onClick={handleSavePlan}
+              className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-6 py-2 rounded-md hover:opacity-90 flex items-center"
+            >
+              <Save className="h-4 w-4 mr-2" /> Save Plan
+            </button>
+          </div>
         </div>
 
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Cost Comparison Results</h1>

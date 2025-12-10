@@ -44,24 +44,87 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6 md:p-8">
       {/* Header */}
-      <header className="mb-10">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Welcome back, {session?.user?.name || 'User'}!</h1>
-            <p className="text-gray-500">Location: Detroit, MI</p>
+      <div className="max-w-7xl mx-auto">
+        <header className="mb-10">
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Welcome back, {session?.user?.name || 'User'}!</h1>
+              <p className="text-gray-500">Location: Grand Rapids, MI</p>
+            </div>
+            <button 
+              onClick={handleLogout}
+              className="px-4 py-2 bg-gray-100 rounded-lg text-gray-700 hover:bg-gray-200 flex items-center transition-colors"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </button>
           </div>
-          <button 
-            onClick={handleLogout}
-            className="px-4 py-2 bg-gray-100 rounded-lg text-gray-700 hover:bg-gray-200 flex items-center transition-colors"
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </button>
-        </div>
-      </header>
+        </header>
+      </div>
 
       {/* Main Content */}
       <main className="space-y-8 max-w-7xl mx-auto">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Average Cost per Serving */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500">Avg. Cost/Serving</p>
+                <p className="text-2xl font-bold text-gray-900">$3.42</p>
+                <p className="text-xs text-green-600 mt-1">↓ 12% from last month</p>
+              </div>
+              <div className="p-3 bg-green-100 rounded-lg">
+                <DollarSign className="h-6 w-6 text-green-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Total Meals Planned */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500">Meals Planned</p>
+                <p className="text-2xl font-bold text-gray-900">24</p>
+                <p className="text-xs text-blue-600 mt-1">+3 this week</p>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <BookOpen className="h-6 w-6 text-blue-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Estimated Monthly Savings */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500">Monthly Savings</p>
+                <p className="text-2xl font-bold text-gray-900">$127.50</p>
+                <p className="text-xs text-purple-600 mt-1">vs. average spending</p>
+              </div>
+              <div className="p-3 bg-purple-100 rounded-lg">
+                <BarChart2 className="h-6 w-6 text-purple-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Favorite Store */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500">Favorite Store</p>
+                <p className="text-2xl font-bold text-gray-900">Meijer</p>
+                <p className="text-xs text-gray-500 mt-1">Saves you ~15%</p>
+              </div>
+              <div className="p-3 bg-amber-100 rounded-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Feature Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Cost Optimizer Card */}
@@ -99,8 +162,8 @@ export default function DashboardPage() {
                   <Calculator className="h-6 w-6 text-green-600" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-gray-900">Calculate Meal Cost</h3>
-                  <p className="text-sm text-gray-500">Create a new meal plan and compare prices</p>
+                  <h3 className="font-medium text-gray-900">Create Meal Plan</h3>
+                  <p className="text-sm text-gray-500">Calculate meal costs and compare prices</p>
                 </div>
               </div>
               <ChevronRight className="h-5 w-5 text-gray-400 group-hover:translate-x-1 transition-transform" />
@@ -109,7 +172,7 @@ export default function DashboardPage() {
 
           {/* Saved Meal Plans Card */}
           <Link 
-            href="/meal-plans" 
+            href="/meal-plans/saved" 
             className="group bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 h-full block"
           >
             <div className="flex justify-between items-center h-full">
