@@ -1,8 +1,20 @@
-import { NextAuthOptions } from 'next-auth';
+import { NextAuthOptions, User as NextAuthUser } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { compare } from 'bcryptjs';
 import dbConnect from './db';
 import User from '@/models/User';
+
+interface ExtendedUser extends NextAuthUser {
+  id: string;
+  location?: string;
+  role: string;
+}
+
+interface CredentialsType {
+  email: string;
+  password: string;
+  demo?: string;
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -11,13 +23,40 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
+        demo: { label: 'Demo', type: 'boolean' }
       },
-      async authorize(credentials) {
+      async authorize(credentials: any) {
         try {
+          // Handle demo login
+          if (credentials?.demo) {
+            return {
+              id: 'demo-user-id',
+              name: 'Demo User',
+              email: 'demo@example.com',
+              role: 'demo',
+              _id: 'demo-user-id',
+              location: 'Demo Location'
+            } as ExtendedUser;
+          }
+
+          // Regular login flow
           if (!credentials?.email || !credentials?.password) {
             throw new Error('Please provide both email and password');
           }
 
+          // Demo mode - accept any non-empty email and password
+          if (credentials.demo === 'true') {
+            return {
+              id: 'demo-user-id',
+              _id: 'demo-user-id',
+              name: 'Demo User',
+              email: credentials.email,
+              location: 'Demo Location',
+              role: 'demo'
+            } as ExtendedUser;
+          }
+
+          // Regular authentication flow
           await dbConnect();
           
           // Find user by email
@@ -43,7 +82,8 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             email: user.email,
             location: user.location,
-          };
+            role: 'user'
+          } as ExtendedUser;
         } catch (error) {
           console.error('Authentication error:', error);
           return null;
@@ -54,14 +94,17 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token._id = user._id;
-        token.name = user.name;
-        token.email = user.email;
+        // Type assertion since we know we're setting the role in the authorize callback
+        const extendedUser = user as unknown as ExtendedUser;
+        token.id = extendedUser.id;
+        token._id = extendedUser._id;
+        token.name = extendedUser.name;
+        token.email = extendedUser.email;
+        token.role = extendedUser.role || 'user'; // Default to 'user' if role is not set
       }
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token }: { session: any; token: any }) {
       if (session.user) {
         session.user._id = token._id as string;
         session.user.name = token.name as string;
