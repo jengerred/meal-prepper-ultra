@@ -62,8 +62,13 @@ export const authOptions: NextAuthOptions = {
             } as ExtendedUser;
           }
 
-          // Regular authentication flow
-          await dbConnect();
+          // Regular authentication flow - only connect to DB if not in demo mode
+          try {
+            await dbConnect();
+          } catch (error) {
+            console.error('Database connection error:', error);
+            throw new Error('Database connection failed');
+          }
           
           // Find user by email
           const user = await User.findOne({ email: credentials.email })
@@ -131,4 +136,6 @@ export const authOptions: NextAuthOptions = {
     error: '/auth/error',
   },
   debug: !isProduction,
+  // Skip database adapter in demo mode
+  adapter: isProduction ? undefined : undefined,
 };
